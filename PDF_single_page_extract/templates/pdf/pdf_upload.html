@@ -1,0 +1,8 @@
+{% block content %}
+<h3>上传PDF文件，输入要提取的页码</h3>
+<form method='post' enctype='multipart/form-data' action="">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type='submit' value='确定' />
+</form>
+{% endblock %}
