@@ -1,0 +1,10 @@
+{% block content % }
+<h1 > 合并两个PDF文件 < /h1 >
+<form method = 'post' enctype = 'multipart/form-data' action = "" >
+    {% csrf_token % }
+    {{form.as_p}}
+    <input type = 'submit' value = "确定" / >
+</form >
+
+<a href = "{% url 'pdf:pdf_extract' %}" > PDF提取页面 < /a > | < a href = "{% url 'pdf:pdf_merge' %}" > PDF合并页面 < /a >
+{% endblock % }
