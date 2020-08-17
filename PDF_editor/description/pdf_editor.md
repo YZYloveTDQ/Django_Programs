@@ -92,3 +92,17 @@ PyPDF2 的 PdfFileMerger()需要==先创建对象，然后 append==
 项目部署在**pythonanywhere 平台**上
 
 > 部署过程中要注意虚拟环境的设置，安装对应安装包
+
+---
+
+# 项目问题
+
+**一直无法下载文件，刚开始以为是 HTTPResponse 错误，更换成了其他返回形式，FileResponse，后来查了很多资料，知乎、微信、stackoverflow 开源中国……**
+
+==发现是 post 问题，判断是空表单了==
+
+```python
+if request.method == 'POST'
+```
+
+POST 一定要大写
