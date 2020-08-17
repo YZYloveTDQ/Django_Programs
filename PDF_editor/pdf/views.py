@@ -9,67 +9,62 @@ import zipfile
 
 
 def pdf_single_page_extract(request):
-    """PDF单页提取"""
-    # 判断是否是通过post提交的表单
-    if request.method == 'POST':
+    """单页提取"""
+    if request.method == 'POST':  # 提交表单方法是post
         form = pdf_extract_form(request.POST, request.FILES)
 
         # 判断表单是否有效
         if form.is_valid():
-            # 提取表单文件
+            # 获取上传的文件
             f = form.cleaned_data['pdf']
-            # 转化为PDF对象
-            #pdf_object = PyPDF2.PdfFileReader(f)
 
-            # 获取需提取页面页码，可能输入很多，所以自动存在列表中
-            page_list = form.cleaned_data['page'].split(
-                ',')  # 数据存储在cleaned_data
+            # 读取文件，转化为PDF文件对象
+            pdf_object = PyPDF2.PdfFileReader(f)
 
-            # 创建压缩对象
+            # 获取代替去页面页码，输入时是用逗号隔开的
+            page_list = form.cleaned_data['page'].split(',')
+
+            # 创建zipfile对象，生成提取文件压缩包
             zip_file = zipfile.ZipFile(os.path.join(
                 'media', 'extracted_pages.zip'), 'w')
 
-            with open(os.path.join('media', 'original_pdf.pdf'), 'wb+') as pdf_object:
-                for chunk in f.chunks():
-                    pdf_object.write(chunk)
+            for page in page_list:
+                page_index = int(page) - 1  # 文档对象索引是从0开始的
 
-                pdf_reader = PyPDF2.PdfFileReader(pdf_object)
+                # 利用PyPDF2提取页码对象
+                page_object = pdf_object.getPage(page_index)
 
-                for page in page_list:
-                    page_index = int(page) - 1  # 对象索引是从0开始的
+                # 创建新的pdf writer
+                pdf_writer = PyPDF2.PdfFileWriter()
 
-                    # 利用PyPDF2提取页码对应的页面对象
-                    page_object = pdf_reader.getPage(page_index)
+                # 添加已读取的页面对象
+                pdf_writer.addPage(page_object)
 
-                    # 创建新的pdf writer
-                    pdf_writer = PyPDF2.PdfFileWriter()
-                    # 添加已经读取的页码对象
-                    pdf_writer.addPage(page_object)
-
-                # 提取的页面生成的PDF文件所存储的路径
+                # pdf文件路径
                 pdf_file_path = os.path.join(
-                    'media', 'extracted_page_{}.pdf'.format(page))
-                # 提取的页面写入到新的PDF文件中
+                    'media', 'extract_page_{}.pdf'.format(page))
+
+                # 将提取的页面写入新的pdf文件
                 with open(pdf_file_path, 'wb') as f_output:
                     pdf_writer.write(f_output)
 
-                # 将PDF文件写入zip文件
+                # 写入zip文件
                 zip_file.write(pdf_file_path)
+
             zip_file.close()
 
-            # 给用户返回zip压缩包
+            # 给用户返回zip文件
             response = FileResponse(
-                open(os.path.join('media', 'extracted_pages.zip'), 'rb'), content_type='application/octet-stream')
-            #response['content-type'] = 'application/zip'
-            response['Content-Disposition'] = "attachment;filename='extracted_pages.zip'"
+                open(os.path.join('media', 'extracted_pages.zip'), 'rb'))
+            response['content-type'] = 'application/zip'  # 避免乱码
+            response['Content-Disposition'] = 'attachment'
             return response
 
     else:
-        # 没有通过post提交
+        # 未通过post提交表单
         form = pdf_extract_form()
 
     return render(request, 'pdf/pdf_extract.html', {'form': form})
-
 
 def pdf_range_extract(request):
     """页面按范围提取"""
